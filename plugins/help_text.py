@@ -20,34 +20,18 @@ async def test(bot, message):
         if user_id == "me":
             user_id == Config.OWNER_ID
         path = Config.DOWNLOAD_LOCATION + str(user_id) + "/"
-        try:
-            files = os.listdir(path)
-            joined_files = "\n".join(files)
-            await message.reply_text(
-                str(joined_files),
-                quote=True
-            )
-        except:
-            await message.reply_text(
-                "No files found.",
-                quote=True
-            )
-            return
     else:
         path = Config.DOWNLOAD_LOCATION
-        try:
-            files = os.listdir(path)
-            joined_files = "\n".join(files)
-            await message.reply_text(
-                str(joined_files),
-                quote=True
-            )
-        except:
-            await message.reply_text(
-                "No files found.",
-                quote=True
-            )
-            return
+    try:
+        files = os.listdir(path)
+        joined_files = "\n".join(files)
+        await message.reply_text(joined_files, quote=True)
+    except:
+        await message.reply_text(
+            "No files found.",
+            quote=True
+        )
+        return
 
 @Clinton.on_message(filters.private & filters.reply & filters.text)
 async def edit_caption(bot, update):

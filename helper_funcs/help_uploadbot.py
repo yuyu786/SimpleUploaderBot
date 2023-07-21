@@ -6,8 +6,7 @@ import os, requests
 
 def DetectFileSize(url):
     r = requests.get(url, allow_redirects=True, stream=True)
-    total_size = int(r.headers.get("content-length", 0))
-    return total_size
+    return int(r.headers.get("content-length", 0))
 
 def DownLoadFile(url, file_name, chunk_size, client, ud_type, message_id, chat_id):
     if os.path.exists(file_name):
@@ -30,11 +29,7 @@ def DownLoadFile(url, file_name, chunk_size, client, ud_type, message_id, chat_i
                         client.edit_message_text(
                             chat_id,
                             message_id,
-                            text="{}: {} of {}".format(
-                                ud_type,
-                                humanbytes(downloaded_size),
-                                humanbytes(total_size)
-                            )
+                            text=f"{ud_type}: {humanbytes(downloaded_size)} of {humanbytes(total_size)}",
                         )
                     except:
                         pass

@@ -58,7 +58,7 @@ async def dl_streamtape(bot, message):
             Translation.NO_FILE_FOUND + "\n\n" + str(e) + "\n\n" + "Link example: \n<code>https://streamtape.com/e/2rKKdYGyxpiZ31G</code>"
         )
         return
-    message.data = "{}|{}|{}".format("video", dl_url, custom_file_name)
+    message.data = f"video|{dl_url}|{custom_file_name}"
     await streamtape.download(bot, message, info_msg)
     
 @Client.on_message(filters.regex(pattern="1fichier.com"))
@@ -87,7 +87,7 @@ async def dl_1fichier(bot, message):
         if custom_file_name is None:
             custom_file_name = filename
         else:
-            custom_file_name += "." + ext
+            custom_file_name += f".{ext}"
         raw = requests.post(url, stream=True)
         soup = BeautifulSoup(raw.text, "html.parser")
         dl_url = soup.find("a", class_="ok").get("href")
@@ -97,7 +97,7 @@ async def dl_1fichier(bot, message):
             send_type = "audio"
         else:
             send_type = "file"
-        message.data = "{}|{}|{}".format(send_type, dl_url, custom_file_name)
+        message.data = f"{send_type}|{dl_url}|{custom_file_name}"
         await streamtape.download(bot, message, info_msg)
     except Exception as e:
         await info_msg.edit_text(
@@ -136,20 +136,19 @@ async def dl_googledrive(bot, message):
         return
     file_title = response_gd["title"]
     ext = response_gd["ext"]
-    if custom_file_name is not None:
-        if custom_file_name.endswith("." + ext):
-            filename = custom_file_name
-        else:
-            filename = custom_file_name + "." + ext
-    else:
+    if custom_file_name is None:
         filename = file_title
+    elif custom_file_name.endswith(f".{ext}"):
+        filename = custom_file_name
+    else:
+        filename = f"{custom_file_name}.{ext}"
     if ext in Config.VIDEO_FORMATS:
         send_type = "video"
     elif ext in Config.AUDIO_FORMATS:
         send_type = "audio"
     else:
         send_type = "file"
-    message.data = "{}|{}|{}".format(send_type, url, filename)
+    message.data = f"{send_type}|{url}|{filename}"
     await googledrive.download(bot, message, info_msg)
 
 @Client.on_message(filters.regex(pattern="fembed.com|fembed-hd.com|femax20.com|vanfem.com|suzihaza.com|embedsito.com|owodeuwu.xyz|plusto.link|watchse.icu"))
@@ -159,12 +158,8 @@ async def dl_fembed(bot, message):
         quote=True
     )
     bypasser = lk21.Bypass()
-    if " * " in message.text:
-        url = message.text.split(" * ")[0]
-        url = "https://fembed.com/f/" + url.split("/")[-1]
-    else:
-        url = message.text
-        url = "https://fembed.com/f/" + url.split("/")[-1]
+    url = message.text.split(" * ")[0] if " * " in message.text else message.text
+    url = "https://fembed.com/f/" + url.split("/")[-1]
     response_fembed = bypasser.bypass_url(url)
     formats = []
     item_id = 0
@@ -194,12 +189,12 @@ async def dl_fembed(bot, message):
     tmp_directory_for_each_user = Config.DOWNLOAD_LOCATION + str(message.from_user.id)
     if not os.path.isdir(tmp_directory_for_each_user):
         os.makedirs(tmp_directory_for_each_user)
-    save_ytdl_json_path = tmp_directory_for_each_user + "/" + json_name + ".json"
+    save_ytdl_json_path = f"{tmp_directory_for_each_user}/{json_name}.json"
     with open(save_ytdl_json_path, "w", encoding="utf8") as outfile:
         json.dump(formats, outfile, ensure_ascii=False)
     for item in formats:
-        cb_string_video = "{}|{}|{}|{}".format("fembed", "video", item["id"], json_name)
-        cb_string_file = "{}|{}|{}|{}".format("fembed", "file", item["id"], json_name)
+        cb_string_video = f'fembed|video|{item["id"]}|{json_name}'
+        cb_string_file = f'fembed|file|{item["id"]}|{json_name}'
         inline_keyboard.append([
             InlineKeyboardButton(
                 "🎥 video " + item["format"] + " " + item["filesize"],
@@ -240,7 +235,7 @@ async def dl_mediafire(bot, message):
         url = message.text
     if re.search("download[0-9]*\.mediafire\.com", url):
         url_parts = url.split("/")
-        url = "https://www.mediafire.com/file/" + url_parts[-2] + "/" + url_parts[-1] + "/file"
+        url = f"https://www.mediafire.com/file/{url_parts[-2]}/{url_parts[-1]}/file"
     if "?dkey=" in url:
         url = url.split("?dkey=")[0]
     try:
@@ -254,15 +249,15 @@ async def dl_mediafire(bot, message):
     if custom_file_name is not None:
         if "\n" in custom_file_name:
             filename = custom_file_name.split("\n")[0]
-        if custom_file_name.endswith("." + ext):
+        if custom_file_name.endswith(f".{ext}"):
             filename = custom_file_name
         else:
-            filename = custom_file_name + "." + ext
+            filename = f"{custom_file_name}.{ext}"
     if ext in Config.VIDEO_FORMATS:
         send_type = "video"
     elif ext in Config.AUDIO_FORMATS:
         send_type = "audio"
     else:
         send_type = "file"
-    message.data = "{}|{}|{}".format(send_type, dl_url, filename)
+    message.data = f"{send_type}|{dl_url}|{filename}"
     await mediafire.download(bot, message, info_msg)

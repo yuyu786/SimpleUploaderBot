@@ -17,25 +17,22 @@ async def progress_for_pyrogram(current, total, ud_type, message, filename, star
         estimated_total_time = elapsed_time + time_to_completion
         elapsed_time = TimeFormatter(milliseconds=elapsed_time)
         estimated_total_time = TimeFormatter(milliseconds=estimated_total_time)
-        
+
         current_message = Translation.DISPLAY_PROGRESS.format(
-            "".join(["●" for i in range(math.floor(percentage / 5))]),
-            "".join(["○" for i in range(20 - math.floor(percentage / 5))]),
+            "".join(["●" for _ in range(math.floor(percentage / 5))]),
+            "".join(["○" for _ in range(20 - math.floor(percentage / 5))]),
             round(percentage, 2),
             filename,
             humanbytes(current),
             humanbytes(total),
             humanbytes(speed),
-            TimeFormatter(time_to_completion) if time_to_completion != "" else "0 s"
+            TimeFormatter(time_to_completion)
+            if time_to_completion != ""
+            else "0 s",
         )
         try:
-            await message.edit_text(
-                "{}\n{}".format(
-                    ud_type,
-                    current_message
-                )
-            )
-            #time.sleep(4.25)
+            await message.edit_text(f"{ud_type}\n{current_message}")
+                    #time.sleep(4.25)
         except Exception as e:
             #logger.info(str(e))
             pass
@@ -68,16 +65,18 @@ def humanbytes(size):
     while size > power:
         size /= power
         n += 1
-    return str(round(size, 2)) + " " + Dic_powerN[n] + 'B'
+    return f"{str(round(size, 2))} {Dic_powerN[n]}B"
 
 def TimeFormatter(milliseconds: int) -> str:
-    seconds, milliseconds = divmod(int(milliseconds), 1000)
+    seconds, milliseconds = divmod(milliseconds, 1000)
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
-    tmp = ((str(days) + "d, ") if days else "") + \
-        ((str(hours) + "h, ") if hours else "") + \
-        ((str(minutes) + "m, ") if minutes else "") + \
-        ((str(seconds) + "s, ") if seconds else "") + \
-        ((str(milliseconds) + "ms, ") if milliseconds else "")
+    tmp = (
+        (f"{str(days)}d, " if days else "")
+        + (f"{str(hours)}h, " if hours else "")
+        + (f"{str(minutes)}m, " if minutes else "")
+        + (f"{str(seconds)}s, " if seconds else "")
+        + (f"{str(milliseconds)}ms, " if milliseconds else "")
+    )
     return tmp[:-2]

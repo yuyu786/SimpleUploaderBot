@@ -58,7 +58,7 @@ async def download(bot, message, info_msg):
     tmp_directory_for_each_user = Config.DOWNLOAD_LOCATION + str(message.chat.id)
     if not os.path.isdir(tmp_directory_for_each_user):
         os.makedirs(tmp_directory_for_each_user)
-    download_directory = tmp_directory_for_each_user + "/" + filename
+    download_directory = f"{tmp_directory_for_each_user}/{filename}"
     command_to_exec = [
         "yt-dlp",
         "-c",
@@ -69,8 +69,7 @@ async def download(bot, message, info_msg):
         "-o", download_directory
     ]
     if Config.HTTP_PROXY != "":
-        command_to_exec.append("--proxy")
-        command_to_exec.append(Config.HTTP_PROXY)
+        command_to_exec.extend(("--proxy", Config.HTTP_PROXY))
     command_to_exec.append("--no-warnings")
     start = datetime.now()
     try:
@@ -102,7 +101,7 @@ async def download(bot, message, info_msg):
         try:
             file_size = os.stat(download_directory).st_size
         except FileNotFoundError as exc:
-            download_directory = os.path.splitext(download_directory)[0] + "." + "mkv"
+            download_directory = f"{os.path.splitext(download_directory)[0]}.mkv"
             file_size = os.stat(download_directory).st_size
         if file_size > Config.TG_MAX_FILE_SIZE:
             await info_msg.edit_text(
@@ -180,6 +179,6 @@ async def download(bot, message, info_msg):
             await info_msg.edit_text(
                 Translation.AFTER_SUCCESSFUL_UPLOAD_MSG_WITH_TS.format(time_taken_for_download, time_taken_for_upload)
             )
-            logger.info("✅ " + filename)
-            logger.info("✅ Downloaded in: " + str(time_taken_for_download))
-            logger.info("✅ Uploaded in: " + str(time_taken_for_upload))
+            logger.info(f"✅ {filename}")
+            logger.info(f"✅ Downloaded in: {str(time_taken_for_download)}")
+            logger.info(f"✅ Uploaded in: {str(time_taken_for_upload)}")

@@ -74,11 +74,17 @@ async def Gthumb02(bot, message, duration, download_directory):
     db_thumbnail = await clinton.get_thumbnail(message.from_user.id)
     if duration == 0:
         duration = 1
-    if db_thumbnail is not None:
-        thumbnail = await bot.download_media(message=db_thumbnail, file_name=thumb_image_path)
-    else:
-        thumbnail = await take_screen_shot(download_directory, os.path.dirname(download_directory), random.randint(0, duration - 1))
-    return thumbnail
+    return (
+        await bot.download_media(
+            message=db_thumbnail, file_name=thumb_image_path
+        )
+        if db_thumbnail is not None
+        else await take_screen_shot(
+            download_directory,
+            os.path.dirname(download_directory),
+            random.randint(0, duration - 1),
+        )
+    )
 
 async def Mdata01(download_directory):
     width = 0

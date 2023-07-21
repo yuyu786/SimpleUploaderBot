@@ -28,8 +28,7 @@ async def ddl_call_back(bot, message):
                     youtube_dl_url = entity.url
                 elif entity.type == "url":
                     o = entity.offset
-                    l = entity.length
-                    youtube_dl_url = youtube_dl_url[o:o + l]
+                    youtube_dl_url = youtube_dl_url[o:o + entity.length]
         if youtube_dl_url is not None:
             youtube_dl_url = youtube_dl_url.strip()
         if custom_file_name is not None:
@@ -42,16 +41,18 @@ async def ddl_call_back(bot, message):
                 o = entity.offset
                 l = entity.length
                 youtube_dl_url = youtube_dl_url[o:o + l]
-    
+
     if len(custom_file_name.split(".")) > 1:
-        description = custom_file_name.split("." + youtube_dl_ext)[0]
+        description = custom_file_name.split(f".{youtube_dl_ext}")[0]
     else:
         description = custom_file_name
-    if not "unknown" in youtube_dl_ext and not custom_file_name.endswith("." + youtube_dl_ext):
-        custom_file_name += '.' + youtube_dl_ext
+    if "unknown" not in youtube_dl_ext and not custom_file_name.endswith(
+        f".{youtube_dl_ext}"
+    ):
+        custom_file_name += f'.{youtube_dl_ext}'
     logger.info(youtube_dl_url)
     logger.info(custom_file_name)
-    
+
     info_msg = await bot.edit_message_text(
         text=Translation.DOWNLOAD_START.format(custom_file_name),
         chat_id=message.message.from_user.id,
@@ -60,7 +61,7 @@ async def ddl_call_back(bot, message):
     tmp_directory_for_each_user = Config.DOWNLOAD_LOCATION + str(message.from_user.id)
     if not os.path.isdir(tmp_directory_for_each_user):
         os.makedirs(tmp_directory_for_each_user)
-    download_directory = tmp_directory_for_each_user + "/" + custom_file_name
+    download_directory = f"{tmp_directory_for_each_user}/{custom_file_name}"
     command_to_exec = []
     async with aiohttp.ClientSession() as session:
         start = datetime.now()
@@ -91,7 +92,7 @@ async def ddl_call_back(bot, message):
         try:
             file_size = os.stat(download_directory).st_size
         except FileNotFoundError as exc:
-            download_directory = os.path.splitext(download_directory)[0] + "." + "mkv"
+            download_directory = f"{os.path.splitext(download_directory)[0]}.mkv"
             file_size = os.stat(download_directory).st_size
         if file_size > Config.TG_MAX_FILE_SIZE:
             await info_msg.edit_text(
@@ -165,9 +166,9 @@ async def ddl_call_back(bot, message):
             await info_msg.edit_text(
                 Translation.AFTER_SUCCESSFUL_UPLOAD_MSG_WITH_TS.format(time_taken_for_download, time_taken_for_upload)
             )
-            logger.info("✅ " + custom_file_name)
-            logger.info("✅ Downloaded in: " + str(time_taken_for_download))
-            logger.info("✅ Uploaded in: " + str(time_taken_for_upload))
+            logger.info(f"✅ {custom_file_name}")
+            logger.info(f"✅ Downloaded in: {str(time_taken_for_download)}")
+            logger.info(f"✅ Uploaded in: {str(time_taken_for_upload)}")
     else:
         await info_msg.edit_text(
             Translation.NO_VOID_FORMAT_FOUND.format("Incorrect Link"),
@@ -198,15 +199,34 @@ async def download_coroutine(info_msg, session, url, file_name, start):
                     time_to_completion = round((total_length - downloaded) / speed) * 1000
                     estimated_total_time = elapsed_time + time_to_completion
                     try:
-                        current_message = "<b>Downloading to my server... 📥</b>\n" + Translation.DISPLAY_PROGRESS.format(
-                            "".join(["●" for i in range(math.floor(percentage / 5))]),
-                            "".join(["○" for i in range(20 - math.floor(percentage / 5))]),
-                            round(percentage, 2),
-                            file_name.split("/")[-1],
-                            humanbytes(downloaded),
-                            humanbytes(total_length),
-                            humanbytes(speed),
-                            TimeFormatter(time_to_completion) if time_to_completion != "" else "0s"
+                        current_message = (
+                            "<b>Downloading to my server... 📥</b>\n"
+                            + Translation.DISPLAY_PROGRESS.format(
+                                "".join(
+                                    [
+                                        "●"
+                                        for _ in range(
+                                            math.floor(percentage / 5)
+                                        )
+                                    ]
+                                ),
+                                "".join(
+                                    [
+                                        "○"
+                                        for _ in range(
+                                            20 - math.floor(percentage / 5)
+                                        )
+                                    ]
+                                ),
+                                round(percentage, 2),
+                                file_name.split("/")[-1],
+                                humanbytes(downloaded),
+                                humanbytes(total_length),
+                                humanbytes(speed),
+                                TimeFormatter(time_to_completion)
+                                if time_to_completion != ""
+                                else "0s",
+                            )
                         )
                         if current_message != display_message:
                             await info_msg.edit_text(
